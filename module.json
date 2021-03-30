@@ -4,6 +4,7 @@
   "description": "Share Ammarus data across worlds",
   "author": "E. P.",
   "version": "0.1.0",
+  "url" : "https://github.com/postedo/ammarus-vtt",
   "minimumCoreVersion": "0.7.9",
   "compatibleCoreVersion": "0.7.9",
   "packs": [
