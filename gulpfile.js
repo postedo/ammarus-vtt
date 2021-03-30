@@ -1,50 +1,24 @@
 const gulp = require('gulp');
 const fs = require('fs-extra');
 const path = require('path');
-const chalk = require('chalk');
 const archiver = require('archiver');
-const stringify = require('json-stringify-pretty-compact');
-const typescript = require('typescript');
 
-const ts = require('gulp-typescript');
-const less = require('gulp-less');
-const sass = require('gulp-sass');
 const git = require('gulp-git');
-
-const argv = require('yargs').argv;
-
-sass.compiler = require('sass');
-
-function getConfig() {
-  const configPath = path.resolve(process.cwd(), 'foundryconfig.json');
-  let config;
-
-  if (fs.existsSync(configPath)) {
-    config = fs.readJSONSync(configPath);
-    return config;
-  } else {
-    return;
-  }
-}
 
 function getManifest() {
   const json = {};
 
-  if (fs.existsSync('src')) {
-    json.root = 'src';
-  } else {
+  if (fs.existsSync('dist')) {
     json.root = 'dist';
+  } else {
+    json.root = '';
   }
 
   const modulePath = path.join(json.root, 'module.json');
-  const systemPath = path.join(json.root, 'system.json');
 
   if (fs.existsSync(modulePath)) {
     json.file = fs.readJSONSync(modulePath);
     json.name = 'module.json';
-  } else if (fs.existsSync(systemPath)) {
-    json.file = fs.readJSONSync(systemPath);
-    json.name = 'system.json';
   } else {
     return;
   }
@@ -52,104 +26,18 @@ function getManifest() {
   return json;
 }
 
-/**
- * TypeScript transformers
- * @returns {typescript.TransformerFactory<typescript.SourceFile>}
- */
-function createTransformer() {
-  /**
-   * @param {typescript.Node} node
-   */
-  function shouldMutateModuleSpecifier(node) {
-    if (!typescript.isImportDeclaration(node) && !typescript.isExportDeclaration(node)) return false;
-    if (node.moduleSpecifier === undefined) return false;
-    if (!typescript.isStringLiteral(node.moduleSpecifier)) return false;
-    if (!node.moduleSpecifier.text.startsWith('./') && !node.moduleSpecifier.text.startsWith('../')) return false;
-    if (path.extname(node.moduleSpecifier.text) !== '') return false;
-    return true;
-  }
-
-  /**
-   * Transforms import/export declarations to append `.js` extension
-   * @param {typescript.TransformationContext} context
-   */
-  function importTransformer(context) {
-    return (node) => {
-      /**
-       * @param {typescript.Node} node
-       */
-      function visitor(node) {
-        if (shouldMutateModuleSpecifier(node)) {
-          if (typescript.isImportDeclaration(node)) {
-            const newModuleSpecifier = typescript.createLiteral(`${node.moduleSpecifier.text}.js`);
-            return typescript.updateImportDeclaration(
-              node,
-              node.decorators,
-              node.modifiers,
-              node.importClause,
-              newModuleSpecifier
-            );
-          } else if (typescript.isExportDeclaration(node)) {
-            const newModuleSpecifier = typescript.createLiteral(`${node.moduleSpecifier.text}.js`);
-            return typescript.updateExportDeclaration(
-              node,
-              node.decorators,
-              node.modifiers,
-              node.exportClause,
-              newModuleSpecifier
-            );
-          }
-        }
-        return typescript.visitEachChild(node, visitor, context);
-      }
-
-      return typescript.visitNode(node, visitor);
-    };
-  }
-
-  return importTransformer;
-}
-
-const tsConfig = ts.createProject('tsconfig.json', {
-  getCustomTransformers: (_program) => ({
-    after: [createTransformer()],
-  }),
-});
-
 /********************/
 /*		BUILD		*/
 /********************/
-
-/**
- * Build TypeScript
- */
-function buildTS() {
-  return gulp.src('src/**/*.ts').pipe(tsConfig()).pipe(gulp.dest('dist'));
-}
-
-/**
- * Build Less
- */
-function buildLess() {
-  return gulp.src('src/*.less').pipe(less()).pipe(gulp.dest('dist'));
-}
-
-/**
- * Build SASS
- */
-function buildSASS() {
-  return gulp.src('src/*.scss').pipe(sass().on('error', sass.logError)).pipe(gulp.dest('dist'));
-}
-
 /**
  * Copy static files
  */
 async function copyFiles() {
-  const statics = ['lang', 'fonts', 'assets', 'templates', 'module.json', 'system.json', 'template.json'];
+  const statics = ['images', 'module.json', 'packs', 'README.md'];
   try {
     for (const file of statics) {
-      if (fs.existsSync(path.join('src', file))) {
-        await fs.copy(path.join('src', file), path.join('dist', file));
+      if (fs.existsSync(file)) {
+        await fs.copy(file, path.join('dist', file));
       }
     }
     return Promise.resolve();
@@ -162,10 +50,7 @@ async function copyFiles() {
  * Watch for changes for each build step
  */
 function buildWatch() {
-  gulp.watch('src/**/*.ts', { ignoreInitial: false }, buildTS);
-  gulp.watch('src/**/*.less', { ignoreInitial: false }, buildLess);
-  gulp.watch('src/**/*.scss', { ignoreInitial: false }, buildSASS);
-  gulp.watch(['src/fonts', 'src/lang', 'src/templates', 'src/*.json'], { ignoreInitial: false }, copyFiles);
+  gulp.watch(['module.json'], { ignoreInitial: false }, copyFiles);
 }
 
 /********************/
@@ -190,9 +75,6 @@ async function clean() {
     files.push('fonts', `${name}.css`);
   }
 
-  console.log(' ', chalk.yellow('Files to clean:'));
-  console.log('   ', chalk.blueBright(files.join('\n    ')));
-
   // Attempt to remove the files
   try {
     for (const filePath of files) {
@@ -212,9 +94,7 @@ async function clean() {
  * Link build to User Data folder
  */
 async function linkUserData() {
-  const name = path.basename(path.resolve('.'));
-  const config = fs.readJSONSync('foundryconfig.json');
-
+  
   let destDir;
   try {
     if (
@@ -358,7 +238,7 @@ const execGit = gulp.series(
   gitTag
 );
 
-const execBuild = gulp.parallel(buildTS, buildLess, buildSASS, copyFiles);
+const execBuild = gulp.parallel(copyFiles);
 
 exports.build = gulp.series(clean, execBuild);
 exports.watch = buildWatch;
