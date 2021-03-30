@@ -4,6 +4,7 @@ const path = require('path');
 const archiver = require('archiver');
 
 const git = require('gulp-git');
+const argv = require('yargs').argv;
 
 function getManifest() {
   const json = {};
@@ -24,6 +25,18 @@ function getManifest() {
   }
 
   return json;
+}
+
+function getConfig() {
+  const configPath = path.resolve(process.cwd(), 'foundryconfig.json');
+  let config;
+
+  if (fs.existsSync(configPath)) {
+    config = fs.readJSONSync(configPath);
+    return config;
+  } else {
+    return;
+  }
 }
 
 /********************/
@@ -86,54 +99,6 @@ async function clean() {
   }
 }
 
-/********************/
-/*		LINK		*/
-/********************/
-
-/**
- * Link build to User Data folder
- */
-async function linkUserData() {
-  
-  let destDir;
-  try {
-    if (
-      fs.existsSync(path.resolve('.', 'dist', 'module.json')) ||
-      fs.existsSync(path.resolve('.', 'src', 'module.json'))
-    ) {
-      destDir = 'modules';
-    } else if (
-      fs.existsSync(path.resolve('.', 'dist', 'system.json')) ||
-      fs.existsSync(path.resolve('.', 'src', 'system.json'))
-    ) {
-      destDir = 'systems';
-    } else {
-      throw Error(`Could not find ${chalk.blueBright('module.json')} or ${chalk.blueBright('system.json')}`);
-    }
-
-    let linkDir;
-    if (config.dataPath) {
-      if (!fs.existsSync(path.join(config.dataPath, 'Data')))
-        throw Error('User Data path invalid, no Data directory found');
-
-      linkDir = path.join(config.dataPath, 'Data', destDir, name);
-    } else {
-      throw Error('No User Data path defined in foundryconfig.json');
-    }
-
-    if (argv.clean || argv.c) {
-      console.log(chalk.yellow(`Removing build in ${chalk.blueBright(linkDir)}`));
-
-      await fs.remove(linkDir);
-    } else if (!fs.existsSync(linkDir)) {
-      console.log(chalk.green(`Copying build to ${chalk.blueBright(linkDir)}`));
-      await fs.symlink(path.resolve('./dist'), linkDir);
-    }
-    return Promise.resolve();
-  } catch (err) {
-    Promise.reject(err);
-  }
-}
 
 /*********************/
 /*		PACKAGE		 */
@@ -150,9 +115,9 @@ function updateManifest(cb) {
     repoURL = config.repository,
     manifestRoot = manifest.root;
 
-  if (!config) cb(Error(chalk.red('foundryconfig.json not found')));
-  if (!manifest) cb(Error(chalk.red('Manifest JSON not found')));
-  if (!rawURL || !repoURL) cb(Error(chalk.red('Repository URLs not configured in foundryconfig.json')));
+  if (!config) cb(Error('foundryconfig.json not found'));
+  if (!manifest) cb(Error('Manifest JSON not found'));
+  if (!rawURL || !repoURL) cb(Error('Repository URLs not configured in foundryconfig.json'));
 
   try {
     const version = argv.update || argv.u;
@@ -185,11 +150,11 @@ function updateManifest(cb) {
     }
 
     if (targetVersion === '') {
-      return cb(Error(chalk.red('Error: Incorrect version arguments.')));
+      return cb(Error('Error: Incorrect version arguments.'));
     }
 
     if (targetVersion === currentVersion) {
-      return cb(Error(chalk.red('Error: Target version is identical to current version.')));
+      return cb(Error('Error: Target version is identical to current version.'));
     }
     console.log(`Updating version number to '${targetVersion}'`);
 
@@ -243,6 +208,5 @@ const execBuild = gulp.parallel(copyFiles);
 exports.build = gulp.series(clean, execBuild);
 exports.watch = buildWatch;
 exports.clean = clean;
-exports.link = linkUserData;
 exports.update = updateManifest;
 exports.publish = gulp.series(updateManifest, execGit);
