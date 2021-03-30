@@ -1,0 +1,39 @@
+{
+  "name": "ammarus",
+  "title": "Amarus Data",
+  "description": "Share Ammarus data across worlds",
+  "author": "E. P.",
+  "version": "0.1.0",
+  "minimumCoreVersion": "0.7.9",
+  "compatibleCoreVersion": "0.7.9",
+  "packs": [
+    {
+      "name": "items",
+      "label": "Items",
+      "path": "packs/items.db",
+      "entity": "Item",
+      "module": "ammarus"
+    },
+    {
+      "name": "creaturs",
+      "label": "Creaturs",
+      "path": "packs/creaturs.db",
+      "entity": "Actor",
+      "module": "ammarus"
+    },
+    {
+      "name": "players",
+      "label": "Players",
+      "path": "packs/players.db",
+      "entity": "Actor",
+      "module": "ammarus"
+    },
+    {
+      "name": "scenes",
+      "label": "Scenes",
+      "path": "packs/scenes.db",
+      "entity": "Scene",
+      "module": "ammarus"
+    }
+  ]
+}
