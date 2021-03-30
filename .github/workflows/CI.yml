@@ -23,14 +23,14 @@ jobs:
 #      - name: Build dist directory
 #        run: npm run build
 
-      - name: Zip Files
-        working-directory: ./dist
-        run: zip -r ./module.zip ./*
-
       - name: Get Version
         shell: bash
         id: get-version
         run: echo "::set-output name=version::$(node ./.github/workflows/get-version.js)"
+
+      - name: Zip Files
+        working-directory: ./dist
+        run: zip -r ./module.zip ./*
         
       - name: Create Release
         id: create_version_release
