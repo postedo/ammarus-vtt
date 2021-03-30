@@ -1,0 +1,23 @@
+{
+	"private": true,
+	"name": "ammarus",
+	"version": "0.1.3",
+	"description": "",
+	"scripts": {
+		"publish": "gulp publish",
+		"lint": "prettier --write .",
+		"build": "gulp build",
+		"build:watch": "gulp watch",
+		"clean": "gulp clean"
+	},
+	"author": "",
+	"license": "",
+	"devDependencies": {
+		"archiver": "^5.1.0",
+		"fs-extra": "^9.0.1",
+		"gulp": "^4.0.2",
+		"gulp-git": "^2.10.1",
+		"yargs": "^16.2.0",
+		"json-stringify-pretty-compact": "^2.0.0"
+	}
+}
