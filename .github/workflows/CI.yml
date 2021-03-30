@@ -1,4 +1,4 @@
-name: CI
+name: Module CI/CD
 
 on:
   push:
@@ -17,11 +17,11 @@ jobs:
         with:
           node-version: '12.x'
             
-#      - name: Install dependencies
-#        run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-#      - name: Build dist directory
-#        run: npm run build
+      - name: Build dist directory
+        run: npm run build
 
       - name: Get Version
         shell: bash
