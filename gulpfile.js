@@ -168,7 +168,6 @@ function updateManifest(cb) {
     });
 
     fs.writeJSONSync('package.json', packageJson, { spaces: '\t' });
-  //  cb(Error('value is: ' + prettyProjectJson))
     fs.writeFileSync(manifest.name, prettyProjectJson, 'utf8');
 
     return cb();
