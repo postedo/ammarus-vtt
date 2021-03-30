@@ -4,18 +4,14 @@ const path = require('path');
 const archiver = require('archiver');
 
 const git = require('gulp-git');
-const argv = require('yargs').argv;
+
+const stringify = require('json-stringify-pretty-compact');
 
 function getManifest() {
   const json = {};
 
-  if (fs.existsSync('dist')) {
-    json.root = 'dist';
-  } else {
-    json.root = '';
-  }
 
-  const modulePath = path.join(json.root, 'module.json');
+  const modulePath = 'module.json';
 
   if (fs.existsSync(modulePath)) {
     json.file = fs.readJSONSync(modulePath);
@@ -28,7 +24,7 @@ function getManifest() {
 }
 
 function getConfig() {
-  const configPath = path.resolve(process.cwd(), 'foundryconfig.json');
+  const configPath = 'foundryconfig.json';
   let config;
 
   if (fs.existsSync(configPath)) {
@@ -120,7 +116,7 @@ function updateManifest(cb) {
   if (!rawURL || !repoURL) cb(Error('Repository URLs not configured in foundryconfig.json'));
 
   try {
-    const version = argv.update || argv.u;
+    const version = packageJson.version;
 
     /* Update version */
 
@@ -131,7 +127,7 @@ function updateManifest(cb) {
     if (!version) {
       cb(Error('Missing version number'));
     }
-
+    
     if (versionMatch.test(version)) {
       targetVersion = version;
     } else {
@@ -158,7 +154,6 @@ function updateManifest(cb) {
     }
     console.log(`Updating version number to '${targetVersion}'`);
 
-    packageJson.version = targetVersion;
     manifest.file.version = targetVersion;
 
     /* Update URLs */
@@ -173,7 +168,8 @@ function updateManifest(cb) {
     });
 
     fs.writeJSONSync('package.json', packageJson, { spaces: '\t' });
-    fs.writeFileSync(path.join(manifest.root, manifest.name), prettyProjectJson, 'utf8');
+  //  cb(Error('value is: ' + prettyProjectJson))
+    fs.writeFileSync(manifest.name, prettyProjectJson, 'utf8');
 
     return cb();
   } catch (err) {
