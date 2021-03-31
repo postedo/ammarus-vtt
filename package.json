@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "ammarus",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "",
 	"scripts": {
 		"publish": "gulp publish",
@@ -17,7 +17,6 @@
 		"fs-extra": "^9.0.1",
 		"gulp": "^4.0.2",
 		"gulp-git": "^2.10.1",
-		"yargs": "^16.2.0",
 		"json-stringify-pretty-compact": "^2.0.0"
 	}
 }
